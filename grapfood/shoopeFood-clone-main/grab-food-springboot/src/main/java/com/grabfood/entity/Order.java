@@ -1,0 +1,107 @@
+package com.grabfood.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "order_code", nullable = false, length = 50)
+    private String orderCode;
+
+    @Column(name = "idempotency_key", nullable = false, unique = true, length = 100)
+    private String idempotencyKey;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id")
+    private User driver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voucher_id")
+    private Voucher voucher;
+
+    @Column(name = "receiver_address", columnDefinition = "TEXT")
+    private String receiverAddress;
+
+    @Column(name = "receiver_lat")
+    private Double receiverLat;
+
+    @Column(name = "receiver_lng")
+    private Double receiverLng;
+
+    @Column(name = "distance_km")
+    private Double distanceKm;
+
+    @Column(name = "subtotal_amount", precision = 10, scale = 2)
+    private BigDecimal subtotalAmount;
+
+    @Column(name = "tax_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    @Column(name = "shipping_fee", precision = 10, scale = 2)
+    private BigDecimal shippingFee;
+
+    @Column(name = "discount_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name = "total_amount", precision = 10, scale = 2)
+    private BigDecimal totalAmount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id", nullable = false)
+    private OrderStatus status;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
+
+    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    private String cancelReason;
+
+    @Column(name = "cancelled_by_role", length = 20)
+    private String cancelledByRole;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cancelled_by_user_id")
+    private User cancelledByUser;
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItem> items = new ArrayList<>();
+}

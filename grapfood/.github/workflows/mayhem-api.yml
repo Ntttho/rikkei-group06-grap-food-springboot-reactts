@@ -1,0 +1,47 @@
+name: Mayhem API Security Fuzzing
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  mayhem-api-fuzz:
+    name: Run Mayhem API Security Fuzzing on Spring Boot Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Start Database and Spring Boot Backend
+        run: |
+          docker compose up -d --build mysql backend
+
+      - name: Wait for Spring Boot & Extract OpenAPI Spec
+        run: |
+          echo "Waiting for Spring Boot to be ready at http://localhost:3000/v3/api-docs..."
+          for i in {1..40}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/v3/api-docs || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Spring Boot backend is healthy and serving OpenAPI!"
+              curl -s http://localhost:3000/v3/api-docs -o openapi.json
+              head -n 20 openapi.json
+              break
+            fi
+            echo "Waiting for backend service... ($i/40) [HTTP $STATUS]"
+            sleep 3
+          done
+
+      - name: Run Mayhem API Fuzzing Action
+        uses: ForAllSecure/mayhem-action@v2
+        continue-on-error: true
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          args: --spec openapi.json --url http://localhost:3000
+
+      - name: Cleanup Containers
+        if: always()
+        run: |
+          docker compose down -v

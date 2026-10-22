@@ -1,0 +1,33 @@
+server:
+  port: ${PORT:3000}
+
+spring:
+  application:
+    name: grab-food-springboot
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:grabfood_db}?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+jwt:
+  secret: ${AUTH_TOKEN_SECRET:grabfoodmonolithsecretkeywhichneedstobelongenoughtosatisfyhmacsha256algorithm}
+  expiration: 86400000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,69 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: food_thunder_mysql
+    restart: always
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "grabfood_db"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./shoopeFood-clone-main/database/seed_all.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p123456 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    networks:
+      - food_network
+
+  backend:
+    build:
+      context: ./shoopeFood-clone-main/grab-food-springboot
+      dockerfile: Dockerfile
+    container_name: food_thunder_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=grabfood_db
+      - DB_USER=root
+      - DB_PASSWORD=123456
+      - AUTH_TOKEN_SECRET=grabfoodmonolithsecretkeywhichneedstobelongenoughtosatisfyhmacsha256algorithm
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - food_network
+
+  frontend:
+    build:
+      context: ./shoopeFood-clone-main/client/fe-flash-food
+      dockerfile: Dockerfile
+    container_name: food_thunder_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - food_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  food_network:
+    driver: bridge
