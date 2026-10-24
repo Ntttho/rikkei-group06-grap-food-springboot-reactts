@@ -11,7 +11,7 @@ Welcome to the **Food Thunder Deli** Spring Boot 3 Microservices Platform.
 | **Config Server** | `config-server` | `8888` | Centralized Spring Cloud Configuration Server (`classpath:/config`) |
 
 ---
-
+ 
 ## 🚀 Startup Order (Thứ tự khởi chạy)
 
 When running locally in your IDE or via command line, always start services in this sequence:
